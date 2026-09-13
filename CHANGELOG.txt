@@ -1,0 +1,185 @@
+﻿v0.38.0
+- Added safe recovery for the three rare hook-override signatures: ProcessLocalScriptFunction, ProcessInternal, and CallFunctionByNameWithArguments. When a nearby real UE4SS runtime log explicitly records one of those resolved addresses, the generator requires the log to be no older than the selected EXE and then rebuilds and uniquely revalidates a target-entry AOB before marking it VERIFIED. A stale log, a changed executable, or a non-unique AOB remains unaccepted.
+- These overrides still have no fabricated static fallback. A game without matching runtime evidence remains NOT FOUND rather than receiving a guessed hook address.
+- The runtime-evidence path is deliberately limited to explicitly named UE4SS hook-address lines and runs only after the ordinary resolver/import paths miss.
+- The Single-tab Log destination is now a fixed single-row, non-wrapping edit field. Long paths remain on one line and do not move or overlap any controls.
+- Batch mode adds Scan Steam Library. It reads registered local Steam libraries and app manifests, chooses the likely 64-bit game executable from standard Unreal Win64 locations, and queues only locally confirmed Unreal targets. The Batch list now starts with Game and then Executable; imported Steam rows immediately display Unreal Engine with their confirmed confidence. Game titles persist with the queue. It applies the existing SteamDB-style filename/path detector offline; no game files, manifests, or Steam account data are uploaded.
+
+v0.37.1
+- Scan and Scan Batch buttons now resize themselves from their native baseline width whenever their label changes (Scan/Cancel/Cancelling... and Scan Batch/Cancel/Cancelling...). Controls to the right are shifted by the same delta and return to their original positions afterward, preventing transient labels from wrapping or overlapping.
+- Batch mode now includes a read-only per-target details pane. Selecting any queued executable shows all 13 UE4SS signature targets with Required/Optional classification and, after a completed scan, the same status, tier, match count, resolved RVA, resolver source, generated AOB, and confidence icon used by Single mode.
+- Batch target details update as the selected row moves through queued, scanning, skipped, failed, cancelled, and completed states. Unscanned entries still display the full 13-target inventory instead of an empty pane.
+
+v0.37.0
+- Expanded scanning/generation from the original five identities to all 13 practical UE4SS Lua custom-signature targets currently recognized/documented across UE4SS and its PatternSleuth binding: FName_Constructor, FName_ToString, StaticConstructObject, GMalloc, GUObjectArray, FText_Constructor, GUObjectHashTables, GNatives, ConsoleManager, GameEngineTick, ProcessLocalScriptFunction, ProcessInternal, and CallFunctionByNameWithArguments.
+- Added REQUIRED vs OPTIONAL target classification and separate coverage totals in Single reports and Batch status. Current upstream-required core targets are FName_Constructor, StaticConstructObject, GMalloc, and GUObjectArray; the remaining targets are optional/feature-specific or rare compatibility overrides.
+- Added PatternSleuth-derived resolver families for FText_Constructor, GUObjectHashTables, and GNatives, plus semantic string/XREF discovery for ConsoleManager and GameEngineTick.
+- Added support for importing/revalidating all 13 installed custom-signature files. Rare ProcessLocalScriptFunction, ProcessInternal, and CallFunctionByNameWithArguments overrides are intentionally not guessed when no generalized upstream resolver exists.
+- Added legacy FMemory_Free.lua import as a GMalloc alias while continuing to generate the current GMalloc.lua filename.
+- Existing Life is Strange: Reunion FText_Constructor signature is included as a known custom corpus family and supports negative OnMatchFound offsets.
+
+v0.36.2
+- Update UE4SS now shows the detected current UE4SS version and package variant directly in the update dialog.
+- Managed installs retain and display the exact release/build identifier recorded by the generator.
+- Pre-existing/manual installs now inspect UE4SS.log for the runtime-reported semantic version and Git SHA; when that SHA matches a currently published rolling release, the full build identifier (for example v3.0.1-1133-g...) is reconstructed.
+- If an exact rolling build number cannot be proven, the dialog still shows the detected semantic version plus the Git SHA instead of pretending the build is known.
+- Developer/zDEV detection now keys specifically on UE4SS.pdb rather than any unrelated PDB that may exist in the game Win64 directory.
+
+v0.36.1
+- Recent executable entries now lead with the friendly game title instead of the immediate Win64 directory name. Steam installs use the game folder beneath steamapps\common; non-Steam Unreal layouts fall back to the existing friendly-title resolver.
+- Recent entries retain the executable filename and full path after the game title for disambiguation.
+
+v0.36.0
+- Added a fully offline game-engine preflight before expensive resolver scanning. The selected executable and nearby install tree are checked using path/file evidence inspired by SteamDB's open-source FileDetectionRuleSets plus Unreal-specific Win64 layout conventions.
+- Strong Unreal Engine evidence proceeds silently. Obvious non-Unreal detections name the likely engine and require an explicit Scan Anyway confirmation; uncertain or mixed evidence produces the same advisory warning instead of hard-blocking protected/custom Unreal titles.
+- Added positive local detection for common alternatives including Unity, Godot, CryEngine, Frostbite, GameMaker, Ren'Py, RPG Maker, RE Engine, Source/Source 2, MonoGame/FNA/XNA, id Tech, REDengine, GZDoom, Electron/NW.js, Defold, Construct, GDevelop, Love2D, OGRE, Unigine, X-Ray, Ubisoft Anvil, Snowdrop, Telltale Tool, Stride/Xenko, KiriKiri, TyranoBuilder, and Amazon Lumberyard.
+- Single mode now shows a color-coded Engine status beside the executable label: green for confirmed Unreal, red for a confidently detected alternative, amber for mixed evidence, and gray for unknown/unconfirmed.
+- Batch mode now has an Engine column and performs one consolidated engine-preflight prompt. Users can scan every flagged target anyway, skip all flagged targets while scanning confirmed Unreal games, or cancel the batch before resolver work begins.
+- Engine classification, confidence, evidence, and any Scan Anyway override are written into each scan report. Resolver confidence rules remain unchanged; engine detection never promotes a signature result.
+- The local tree sampler is bounded by entry count and time, avoids known cache/log-heavy directories, and never uploads executable or file-list information. Detection is advisory because protected, customized, or unusual Unreal deployments can hide ordinary filesystem markers.
+- Added THIRD-PARTY-NOTICES.txt with attribution for SteamDB FileDetectionRuleSets (MIT).
+
+v0.35.0
+- Added Install UE4SS and Update UE4SS controls to Single mode.
+- Release choices are fetched live from the official UE4SS-RE/RE-UE4SS GitHub releases API. Available packages are sorted newest-first, with each User build followed by its same-version zDEV/Developer build; the rolling experimental-latest pair is included and labeled Experimental.
+- Added an install/update dialog with destination confirmation, version/variant selection, official GitHub download, Windows-native archive extraction, and per-game install metadata stored under the generator's existing AppData settings.
+- Update preserves UE4SS settings, UE4SS_Signatures, and Mods state while allowing release-owned UE4SS files to refresh. Layout switches migrate user state; recognized pre-3.0 -> 3.x transitions back up old settings before taking the newer settings format.
+- Generated custom signatures now write directly to the selected game's live UE4SS_Signatures folder instead of UE4SS_Signature_Output\<exe>\UE4SS_Signatures. New-layout ue4ss\UE4SS_Signatures installs are detected automatically.
+- Generation no longer wipes every Lua file in the signature directory; unrelated custom signatures are left untouched and only generated target filenames are overwritten.
+- Existing-signature discovery now checks the manager-resolved live UE4SS signature directory first, including managed custom install locations.
+- Kept the v0.34 native status-dot UI and Scan/Scan Batch magnifying-glass icons; all other buttons remain plain Windows-native controls.
+- Cancel continues to reset the progress bar immediately to 0%.
+
+v0.34.0
+- Removed the bundled assets folder entirely. The main UI no longer depends on PNG/ICO files for confidence indicators or command-button imagery.
+- Added lib\NativeUI.ahk. Main command buttons now request semantic Windows stock icons through SHGetStockIconInfo instead of relying on hard-coded shell32.dll/imageres.dll resource indexes, so the icon source remains offline and Windows-owned across supported Windows versions.
+- Browse/Open Folder/Log Browse use the native folder icon; Scan/Scan Batch use Find; Generate uses Settings; Open Report uses the associated-document icon; Runtime Dump uses the fixed-drive icon; Batch Add Recent uses Stack; Remove uses Delete; and Clear uses Recycle Bin.
+- Replaced the four packaged 16x16 status-dot PNGs with runtime-generated Win32 GDI icons. VERIFIED/STRONG remains green, UNVERIFIED yellow, NOT FOUND gray, and AMBIGUOUS/failed red. The generated dots preserve the same dark-ring + colored-center visual language without touching disk.
+- The legend is likewise asset-free and uses native Segoe UI text with the same status colors. No network access, Windows emoji extraction, or font-file redistribution is required.
+
+v0.33.0
+- Added offline runtime-dump import for protected/opaque games whose live process denies ordinary PROCESS_VM_READ. The feature is a byte-source fallback only; resolver identities, confidence thresholds, AOB uniqueness requirements, and generation policy are unchanged.
+- Added a Runtime Dump... button to Single mode. Selecting a dump performs a one-scan override and analyzes that imported mapped image even if the original disk EXE did not trip the opaque classifier.
+- When an opaque scan cannot obtain a live runtime image because the game is not running or read-only access is denied, Single mode now offers to select a runtime dump before falling back to disk bytes.
+- ScannerCore now parses standard Windows MDMP files with ModuleListStream plus MemoryListStream and/or Memory64ListStream, matches the selected EXE module, copies only memory ranges overlapping that module, and rebuilds them as a normalized RVA-addressed PE snapshot.
+- ScannerCore also accepts already-mapped PE snapshots whose file layout covers SizeOfImage by RVA. Ordinary disk-layout PE files are rejected from this import mode rather than being mislabeled as runtime bytes.
+- Dump imports track total mapped-byte coverage and executable-section coverage. Missing executable bytes remain zero-filled and feed the existing conservative opacity guard, preventing partial dumps from masquerading as clean runtime images.
+- Reports now distinguish live runtime capture from imported runtime dumps and include dump format/source path alongside module base, image size, missing bytes, and missing executable bytes.
+- Dump import never opens or modifies the live game process and does not attempt to bypass anti-cheat/protected-process restrictions.
+
+v0.32.0
+- Fixed Single Scan cancellation. Long scans are now started from a one-shot worker timer after the Scan button callback returns, so the same button can receive a second click and actually enter its Cancel path while scanning is active.
+- Fixed Batch Scan cancellation with the same deferred-worker model. Batch cancellation now persists across target boundaries instead of being accidentally cleared when the next target initializes.
+- Cancel immediately terminates any active ScannerCore child process, waits briefly for it to exit, and marks partial scan results ineligible for generation. AHK-only resolver work still exits cooperatively at the existing cancellation checkpoints.
+- Improved protected-game runtime capture when Windows denies Toolhelp module enumeration but still grants ordinary read-only access to the exact process. ScannerCore now falls back to ProcessBasicInformation + read-only PEB.ImageBaseAddress discovery, then validates the mapped PE headers before capture.
+- The PEB fallback does not weaken process-access requirements or bypass protected-process/anti-cheat memory restrictions. If PROCESS_VM_READ, the PEB, or the mapped headers cannot be read normally, runtime capture still stops and reports ACCESS_DENIED.
+- Wuthering Waves regression: v0.31 path-verifies and opens the selected process read-only, but TH32CS_SNAPMODULE returns Access Denied. v0.32 can continue from the already-authorized handle without relying on Toolhelp module enumeration.
+
+v0.31.0
+- Added automatic runtime-image fetching for executables classified as opaque/protected on disk. ScannerCore now locates the running process by exact executable path and requests only PROCESS_QUERY_LIMITED_INFORMATION + PROCESS_VM_READ.
+- Added a Windows runtime capture backend that snapshots the selected process's mapped main module section-by-section, preserves RVAs, and rewrites temporary section raw offsets to RVA so the existing PE/resolver stack can analyze live bytes unchanged.
+- The runtime snapshot is temporary and is deleted after the scan. Neither the selected EXE nor the running process is modified. No injection, thread suspension, memory writing, protection disabling, or anti-cheat bypass behavior is used.
+- Single mode automatically attempts runtime capture after an OPAQUE classification. If the game is not running, it offers Retry so the user can launch the game normally and reach the main menu/gameplay. Batch mode only captures targets already running and never blocks waiting for launch.
+- Runtime snapshots are re-run through the native static-pattern pre-index and all five existing resolver/verification paths. Confidence thresholds and generation rules are unchanged; runtime capture is an alternate byte source, not a new confidence shortcut.
+- Added runtime capture diagnostics for PID, mapped module base, image size, section count, total unreadable bytes, and unreadable executable bytes. If executable-page coverage is materially incomplete, the active image remains classified protected/opaque even if zero-filled holes lower sampled entropy.
+- Scan reports now distinguish on-disk classification from active analysis source and runtime-image classification. Historical UE4SS/PatternSleuth evidence continues to be discovered beside the original game EXE even while resolver bytes come from the temporary runtime snapshot.
+- Wuthering Waves is the motivating regression case, but the fallback contains no WuWa-specific RVA, AOB, section name, process ID, or resolver result.
+
+v0.30.0
+- Added conservative on-disk opaque/protected-image classification for unusually transformed Shipping executables. The classifier samples the largest executable section for near-random entropy and combines that with giant executable payload size, repeated/renamed section layouts, exception-directory scale, and whether the native static Unreal resolver families produced any hits.
+- Opaque-image classification is diagnostic only: it never supplies a target, never promotes a resolver, and never lowers VERIFIED/STRONG/UNVERIFIED confidence rules. Resolver scanning still runs normally so readable islands of code can succeed.
+- Scan reports now record the on-disk image classification and its evidence. NOT FOUND / AMBIGUOUS diagnostics inherit the classification context so a protected all-target miss is not presented as though every unrelated compiler pattern disappeared.
+- Added a specific all-target completion warning for opaque images. This prevents users from chasing static AOB families when plaintext Unreal strings remain visible but the corresponding machine-code region is packed/encrypted/virtualized on disk.
+- Wuthering Waves regression specimen: current Client-Win64-Shipping.exe presents a ~620 MB executable section with ~7.996/8 sampled entropy, 13 sections sharing the same .std name, ~2.45 million exception entries, zero hits across the 43 current static resolver families, and plaintext Unreal semantic strings in a non-executable region. The companion Client-Win64-ShippingBase.dll contains the protection/runtime layout rather than ordinary Unreal resolver anchors. No game RVA/address is hardcoded.
+
+v0.29.0
+- Added native outlined/PGO/LTO FUObjectArray field-cluster discovery for optimized UE4/UE5 Shipping builds. ScannerCore semantically identifies AllocateUObjectIndex, FreeUObjectIndex, and UObjectBaseShutdown diagnostic families, follows outlined cold branches back to decoded hot callers, and reconstructs the FUObjectArray base from converging RIP-relative field accesses.
+- The new GUObjectArray path requires at least two independent semantic families, the characteristic +0x10/+0x24 field constellation plus additional early/object-array fields, a decisive score over runner-up bases, and a revalidated unique relocatable field-reference AOB. It explicitly avoids treating an internal synchronization object such as FUObjectArray+0x30 as the array base.
+- The First Descendant regression: v0.28's one-path semantic heuristic selected STRONG RVA 0xB436F60, which direct binary analysis showed is the internal lock at FUObjectArray+0x30. The new generalized field-cluster resolver independently converges on the true base RVA 0xB436F30 from AllocateUObjectIndex, FreeUObjectIndex, and UObjectBaseShutdown with score 83 vs runner-up 0. These RVAs are regression evidence only and are not hardcoded.
+- Cross-game validation: the new path independently PROVES MECCHA CHAMELEON's already-known GUObjectArray RVA 0x95DD590 from Allocate+Free families, nominates the already-known Borderlands 3 and PAYDAY 3 bases but correctly withholds promotion because only one independent family is available, and produces no false proof on Days Gone.
+- Moved scan reports out of game/custom-signature folders. Reports now live under <Log destination>\log, or A_ScriptDir\log when Log destination is blank, with game/executable names in the report filename.
+- Added a persistent Log destination control to Single mode. The selected base directory is stored in %AppData%\UE4SSSignatureGenerator\settings.ini and survives application upgrades.
+- Added Open Folder beside the executable Browse control for quick access to the selected game's Win64 directory.
+- Single and Batch Open Report now resolve the centralized report location. Generate appends generation details to that same central report while generated Lua signatures remain under the game's UE4SS_Signature_Output folder.
+
+v0.28.0
+- Reworked native StaticConstructObject semantic string-XREF discovery to use a direct target-driven RIP-relative LEA pass instead of invoking the full x86 decoder for every broad LEA-looking byte sequence across executable sections.
+- The optimized pass recognizes the invariant Win64 REX.W + LEA + RIP-disp32 encoding, computes each target directly, and only retains instructions whose target is already one of the requested semantic anchors. Heavy function/call-graph decoding now begins after the XREF target is proven relevant.
+- PAYDAY 3 regression: the exact executable that previously spent about 6m02s in StaticConstructObject resolves the same RVA 0x12CEF5C through the same NewObject/RF-flags semantic chain in roughly 1.24s in the native resolver benchmark. The RVA is test evidence only and is not hardcoded.
+- Cross-game native semantic regressions remain stable: Days Gone resolves RVA 0x1AC6D30 in ~0.73s, Borderlands 3 resolves RVA 0x17985E0 in ~3.66s, and MECCHA CHAMELEON resolves RVA 0x15E03C0 in ~0.58s on the Linux test build.
+- No confidence rules were weakened and no generated AOB logic changed. v0.28 is a performance rewrite of an existing semantic evidence path, not a new shortcut or game-specific resolver.
+
+v0.27.0
+- Added a second native FName(wchar_t const*, EFindName) corroboration family for staged constructor wrappers that parse the incoming name through a helper before entering the internal FName construction path.
+- The staged proof requires preservation of both this and the incoming EFindName, an early helper that consumes the original RDX as wchar_t with repeated 16-bit loads / 2-byte stepping / zero termination, and a later decoded call that restores exactly RCX=this and R8D=the incoming EFindName.
+- Leaf wchar parser helpers without .pdata/unwind entries are now decoded safely from a bounded direct-call target until RET, allowing tiny no-stack parser functions to contribute semantic evidence.
+- PAYDAY 3 regression evidence: candidate RVA 0x10E0E7C passes with staged score 24 and wchar helper RVA 0x10EC144; a nearby overload that shares the parser but routes EFindName through a different argument slot is rejected. These addresses are regression evidence only and are not hardcoded.
+- Borderlands 3 and Days Gone continue to pass the existing compact-wrapper family unchanged, so v0.27 broadens constructor coverage rather than replacing prior proofs.
+
+v0.26.0
+- Added candidate-only native structural corroboration for newer StaticConstructObject_Internal implementations that receive an FStaticConstructObjectParameters-style parameter pack instead of the older direct Class/Outer/Name/Flags ABI.
+- The proof decodes the already-selected target and tracks register provenance from the incoming RCX pack. It requires independent loads of Class(+0), Outer(+8), Name(+0x10), and ObjectFlags(+0x18), multiple additional construction fields, and a nonvolatile alias of the parameter-pack pointer.
+- The loaded Class must receive the long-lived Unreal 0x10000080 Native/Intrinsic EClassFlags test, and at least one decoded downstream call must reconstruct RCX=Class, RDX=Outer, R8=Name, R9=ObjectFlags from those exact pack fields. Return-value propagation supplies additional confidence.
+- A STRONG StaticConstructObject candidate is promoted to VERIFIED only when this independent decoded proof returns the exact same RVA. The proof cannot discover or substitute a target and contains no game-specific addresses.
+- MECCHA CHAMELEON regression evidence: candidate RVA 0x15E03C0 scores 33, exposes 12 distinct parameter-pack fields, performs two independently reconstructed core calls, tests UClass at +0xD4 with 0x10000080, and propagates the core result toward return. The nearby allocation helper does not satisfy the proof. These addresses are test evidence only and are not hardcoded.
+- Older direct-ABI SCO implementations remain on the existing semantic/call-graph paths; Days Gone and Borderlands 3 intentionally do not match the new parameter-pack proof.
+
+v0.25.0
+- Added native structural corroboration for older/custom UE4 FName(wchar_t const*, EFindName) constructor wrappers that delegate into a helper instead of matching PatternSleuth's modern full direct prologues.
+- The proof decodes the public wrapper, requiring this-pointer preservation, RDX null handling, EFindName forwarding from R8D into the helper ABI, constructor defaults, return-this behavior, and a null-name zeroing path.
+- ScannerCore follows the wrapper's sole helper and proves wchar_t semantics from propagated 16-bit loads, 2-byte stepping, zero termination behavior, and the ASCII fast-path boundary. Near-identical ANSI constructor siblings are explicitly rejected because they consume bytes instead of words.
+- Borderlands 3 regression evidence: the semantic XREF candidate RVA 0x169A960 scores 15/15 as the wchar wrapper and resolves helper RVA 0x16A32A0, while sibling wrapper RVA 0x169A8E0 scores 15/0 and is rejected as ANSI. These addresses are test evidence only and are not hardcoded.
+- The same generalized proof independently validates the existing Days Gone FName constructor candidate, providing cross-game evidence that this is an old/custom UE4 constructor family rather than a Borderlands-specific patch.
+- Existing full direct constructor fingerprints remain T1 and unchanged; the new native proof runs only when a lower-confidence constructor candidate still needs independent corroboration.
+
+v0.24.0
+- Added a native semantic pre-4.23 FName::ToString resolver based on the actual old GNames implementation rather than fixed caller bytes. It identifies lazy GNames singleton getters by load/test/0x408-or-0x808 allocation/store-back behavior, including compiler-split chained runtime functions.
+- Old FName::ToString candidates are decoded and ranked by stable semantics: ComparisonIndex/Number field reads, 0x3FFF chunk masking, >>14 chunk selection, two-level GNames indexing, FString output preservation, underscore suffix append, and Number-1 handling.
+- Added native string-independent GUObjectArray constructor analysis. It can both corroborate an existing semantic candidate and discover GUObjectArray from scratch when older stat/string families are absent, by finding the characteristic FUObjectArray constructor and deriving its writable singleton global from a decoded LEA RCX,&global -> CALL site.
+- ScannerCore now tracks PE virtual section size separately from raw file size so zero-filled .data/BSS globals can be validated without pretending they have raw bytes.
+- Direct analysis of the current Days Gone executable resolves FName::ToString to RVA 0x19FA100 through GNames RVA 0x4C0DC48 / getter RVA 0x19FA7A0, and independently discovers/corroborates GUObjectArray RVA 0x4C12290 through constructor RVA 0x1AB7150. These addresses are test evidence only; the shipped resolver derives them semantically and contains no Days Gone RVA hardcodes.
+- Existing modern/direct/corpus paths remain first priority. The new old-engine passes run only after cheaper FName/GUObjectArray layers miss or need corroboration.
+v0.23.2
+- The Single tab now auto-fills Game executable with the most recently completed valid scan target on startup.
+- The Recent dropdown selects that same entry so the restored path and history UI stay in sync.
+- Only the executable path is restored; prior scan results are not resurrected, so Generate/Open Report remain disabled until a fresh scan completes.
+
+v0.23.1
+- Added Open Report buttons to both Single and Batch.
+- Open Report is enabled after a successful Single scan and opens that scan's current scan-report.txt with the Windows default text-file handler.
+- The button is disabled while scanning or when the selected executable no longer matches the retained Single-scan state.
+- Batch scans preserve/restore the Single Open Report state alongside Generate. The Batch button opens the selected row's report directly.
+
+v0.23.0
+- Added a pre-4.23 GNames semantic fallback for FName::ToString. It resolves the historical GNames getter, enumerates real runtime functions that consume the singleton, and structurally ranks FName-shaped consumers without hardcoding a game RVA.
+- Added optional Kismet Conv_NameToString corroboration for a GNames-selected FName::ToString candidate.
+- Added layered FName::ToString failure diagnostics that report which direct/legacy families actually matched, plus semantic fallback details.
+- Added legacy GUObjectArray corroboration through FUObjectArray::AllocateObjectPool: the Max-UObject fatal diagnostic identifies the member function and callers must independently materialize the same GUObjectArray global as RCX.
+- Pre-scans the two historical GNames getter families in ScannerCore so the new fallback does not add another full static-pattern pass.
+- Batch status now always shows an at-a-glance N/5 VERIFIED summary and appends STRONG counts when present.
+- Existing Single/Recent/Batch workflow and all previously verified fast paths remain unchanged.
+
+v0.22.0
+
+- Added Single and Batch scanning tabs. Batch mode scans a queue of game executables sequentially and shows per-game VERIFIED/STRONG/miss counts and elapsed time.
+- Added a persistent Recent executable dropdown on the Single tab. The 20 most recently completed scans are stored under the user's AppData settings folder so replacing/upgrading the release does not reset them.
+- Dragging EXEs onto the Batch tab now queues them; double-clicking a batch row switches that executable into the Single tab.
+- Batch queues persist in the same AppData settings file across launches/releases, and Add Recent can populate the queue from recent successful scans in one click.
+- Batch scanning reuses the exact same resolver pipeline and writes the normal scan-report.txt for every game, while preserving the user's last Single-scan Generate state.
+- Added the historical PatternSleuth UEnum::SetEnums FName::ToString structural fallback for older/custom UE4 branches.
+- FName_ToString misses now emit their resolver diagnostics directly in the live log. STRONG GUObjectArray semantic candidates also surface corroboration diagnostics for regression work.
+
+v0.21.0
+
+- Restored a curated archive of older PatternSleuth FName::ToString pattern families that were dropped from the modern minimal resolver set, improving pre-4.23 / custom UE4 coverage without replacing current fast paths.
+- Added UObjectBaseShutdown semantic corroboration for GUObjectArray. A one-path Allocate/Free candidate can become VERIFIED only when the independently identified shutdown function directly references the same global.
+- GUObjectArray remains STRONG if the shutdown proof is absent or disagrees; no confidence thresholds were lowered.
+- Existing fast paths and native scanner behavior are unchanged.
+
+v0.20.0
+
+- Added legacy FName_ToString semantic fallback using SkySphereMesh string/XREF evidence.
+- Added FUObjectArray AllocateUObjectIndex / FreeUObjectIndex semantic resolution for older/custom UE4 builds.
+- Semantic GUObjectArray fallback searches both UTF-8 and UTF-16 diagnostics, resolves owning runtime functions, traces inbound member calls, and reconstructs the writable global loaded into RCX (`this`).
+- Multiple independent member-call hits can promote GUObjectArray to VERIFIED; a single path remains STRONG.
+- Existing T1/T2/T3 fast paths remain first priority and unchanged.

@@ -1,0 +1,169 @@
+﻿UE4SS Signature Generator v0.38.0 - build/layout notes
+
+Entry point:
+  UE4SSSignatureGenerator.ahk
+
+AHK dependency order is already expressed by #Include directives in the entry
+script. A compiler which flattens/appends included source may use that order.
+
+Native dependency:
+  bin\ScannerCore.exe
+
+Raw .ahk development mode:
+  Keep bin\ScannerCore.exe beside the source tree. The main script discovers and
+  launches it automatically. Users never launch ScannerCore.exe directly.
+
+Compiled mode:
+  lib\NativeScanner.ahk uses:
+      FileInstall "bin\ScannerCore.exe", outPath, 1
+  so Ahk2Exe can embed the helper in the main compiled application. At runtime it
+  is extracted under %TEMP%\UE4SSSignatureGenerator and managed automatically.
+
+ScannerCore source:
+  native\ScannerCore.go
+  native\runtime_capture_windows.go   Windows read-only mapped-image capture
+  native\runtime_capture_other.go     non-Windows build stub
+  native\runtime_dump.go              offline MDMP / mapped-PE importer
+  native\x86asm\*.go (bundled decoder source)
+
+Reference build command used for the bundled Win64 helper:
+  cd native
+  GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -trimpath \
+    -ldflags="-s -w -H=windowsgui" -o ..\bin\ScannerCore.exe .
+
+The resulting helper is a self-contained Windows x64 GUI-subsystem executable.
+No Go installation/runtime is needed on the target PC.
+
+AHK workflow modules:
+  lib\Recent.ahk    persistent recent-executable history
+  lib\Batch.ahk     sequential batch queue/orchestration
+  lib\NativeUI.ahk      Windows stock Scan icons + in-memory GDI status dots
+  lib\UE4SSManager.ahk   official UE4SS release/install/update manager
+
+These are normal #Include dependencies and can be flattened/appended by the same custom Ahk2Exe workflow. NativeUI has no external asset dependency and uses only Windows system APIs.
+
+ScannerCore FName constructor proof expanded in v0.27:
+  --semantic-fname-ctor-proof now also recognizes staged wchar wrappers. The proof can
+  decode tiny leaf parser helpers without unwind metadata, requires original-RDX wchar_t
+  consumption, and verifies later RCX=this / R8D=EFindName reconstruction before promotion.
+
+ScannerCore semantic mode added in v0.26:
+  --semantic-sco-proof <tsv> --sco-candidate <RVA>
+      Independently corroborates an already-selected StaticConstructObject target when
+      the function uses the newer FStaticConstructObjectParameters-style parameter pack.
+      The proof decodes field provenance, UClass flags, reconstructed allocation arguments,
+      and return flow. It never discovers or substitutes a target.
+
+ScannerCore semantic mode added in v0.25:
+  --semantic-fname-ctor-proof <tsv> --fname-ctor-candidate <RVA>
+      Independently corroborates an already-selected FName wchar constructor by decoding
+      a compact delegating wrapper and proving wchar_t consumption in its helper. The
+      proof rejects sibling ANSI wrappers even when their outer wrapper shape is identical.
+
+ScannerCore semantic modes added in v0.24:
+  --semantic-legacy-fname <tsv>
+      Decodes pre-4.23 GNames singleton/getter behavior and identifies old FName::ToString structurally.
+  --semantic-guobject-proof <tsv> --guobject-candidate <RVA>
+      Independently corroborates an existing GUObjectArray candidate using constructor-layout semantics.
+  --semantic-guobject-discover <tsv>
+      Discovers a GUObjectArray singleton without strings/pattern families by resolving the constructor layout first and tracing its LEA RCX global callsite.
+
+None of these semantic modes contains game-specific addresses. Days Gone and Borderlands 3 were used only as regression specimens to derive/test generalized Unreal behavior.
+
+
+Native analysis note added in v0.28:
+  StaticConstructObject semantic string-XREF discovery uses a direct RIP-relative
+  LEA target pass before any heavy decoder/call-graph work. This is intentionally
+  target-driven and preserves the existing semantic confidence policy.
+
+
+Native semantic mode added in v0.29:
+  --semantic-guobject-outlined <tsv>
+      Reconstructs FUObjectArray in optimized/PGO/LTO builds from independent
+      AllocateUObjectIndex / FreeUObjectIndex / UObjectBaseShutdown semantic
+      families and their decoded RIP-relative field clusters. The result includes
+      a proof-site RVA, signed base adjustment, and independent-family count.
+      It deliberately distinguishes member fields such as an internal +0x30 lock
+      from the true structure base.
+
+v0.29 report workflow:
+  Scan reports no longer live under the selected game's UE4SS_Signature_Output.
+  The AHK front-end writes them under <configured base>\log, defaulting to
+  A_ScriptDir\log when the persistent Log destination setting is blank.
+  As of v0.35, generated Lua signatures are written directly into the live
+  UE4SS_Signatures folder resolved for the selected game/managed UE4SS install.
+  The old UE4SS_Signature_Output staging tree is no longer used.
+
+
+v0.30 image-layout diagnostics:
+  UE4SSSignatureGenerator.ahk now performs a bounded entropy/layout classification
+  after native static-pattern priming. It samples only small windows from the
+  largest executable PE section and does not alter ScannerCore.exe or resolver
+  confidence. The v0.29 ScannerCore binary remains the native helper for v0.30.
+
+
+v0.31 runtime-image capture:
+  ScannerCore accepts:
+      --exe <selected game EXE>
+      --capture-runtime <temporary normalized PE path>
+      --runtime-meta <TSV metadata path>
+      --runtime-wait-ms <optional process wait>
+      --progress <TSV progress path>
+
+  The Win64 helper enumerates processes, verifies the full executable path, opens
+  the matching process with query + VM_READ rights only, locates the mapped main
+  module, and copies its committed readable section bytes. The temporary snapshot
+  keeps original RVAs but sets each section PointerToRawData=VirtualAddress and
+  SizeOfRawData=mapped section span. Existing ScannerCore and AHK RVA/raw mapping
+  therefore work without special runtime resolver branches.
+
+
+v0.32 cancellation/runtime discovery notes:
+- Single and Batch entry buttons queue their long-running workers with one-shot SetTimer callbacks so their click callbacks are not held open for the whole scan. This is required for the same button to receive Cancel while work is active.
+- StopNativeScanner closes the tracked ScannerCore PID and briefly waits for teardown before temporary-directory cleanup.
+- On Windows, runtime capture still prefers TH32CS_SNAPMODULE. If that enumeration is denied after the exact process has already granted PROCESS_VM_READ, ScannerCore uses NtQueryInformationProcess(ProcessBasicInformation) and read-only PEB.ImageBaseAddress discovery, then validates the mapped PE before capture.
+
+
+v0.33 offline runtime-dump import:
+  ScannerCore additionally accepts:
+      --exe <selected game EXE>
+      --runtime-dump <user-supplied .dmp/.mdmp or mapped PE snapshot>
+      --capture-runtime <temporary normalized PE path>
+      --runtime-meta <TSV metadata path>
+      --progress <TSV progress path>
+
+  native\runtime_dump.go is cross-platform parsing/normalization code. Standard
+  Windows minidumps are read through ModuleListStream and MemoryListStream and/or
+  Memory64ListStream. Only memory overlapping the selected executable module is
+  copied. The resulting temporary PE uses PointerToRawData=VirtualAddress so all
+  existing ScannerCore/AHK RVA logic remains unchanged. Already-mapped PE images
+  are accepted when their file layout covers SizeOfImage by RVA.
+
+  Runtime-dump import is offline and performs no process access. Missing dumped
+  ranges remain zero-filled and are reported separately, including executable
+  coverage, so the AHK opacity guard can conservatively reject incomplete images.
+
+
+v0.35 UE4SS manager / deployment notes:
+  lib\UE4SSManager.ahk queries:
+      https://api.github.com/repos/UE4SS-RE/RE-UE4SS/releases?per_page=100
+  and accepts official paired asset names of the form UE4SS_v<version>.zip and
+  zDEV-UE4SS_v<version>.zip, including the rolling experimental-latest commit
+  build. Experimental entries are labeled in the dropdown. Downloads use the browser_download_url
+  returned by GitHub and Windows PowerShell Expand-Archive for extraction.
+
+  Per-game manager metadata is kept in the existing AppData settings.ini rather
+  than inside the game directory. Update/install overlays release-owned files but
+  preserves UE4SS settings, UE4SS_Signatures, and Mods state. When an update
+  changes between the classic root layout and the newer ue4ss subfolder layout,
+  those user-owned trees are migrated before release files are overlaid. A known
+  pre-3.0 -> 3.x transition backs up legacy settings and takes the 3.x format.
+
+  Signature deployment resolves to <Win64>\UE4SS_Signatures for the classic
+  layout, or <Win64>\ue4ss\UE4SS_Signatures when the managed/new-layout UE4SS
+  installation keeps its working files in the ue4ss subfolder.
+
+
+v0.36 engine preflight
+----------------------
+lib\EngineDetection.ahk contains the offline engine classifier and SteamDB-inspired path evidence. It is AHK-only and does not require rebuilding ScannerCore.exe. See THIRD-PARTY-NOTICES.txt for MIT attribution.

@@ -1,0 +1,107 @@
+UE4SS Signature Generator v0.38.0
+Executable: E:\SteamLibrary\steamapps\common\DeadPoly\DeadPoly\Binaries\Win64\DeadPoly-Win64-Shipping.exe
+Engine preflight: Unreal Engine (high confidence) | decision UNREAL | score 34 | Unreal score 34
+Engine evidence: selected EXE is under Binaries\Win64; selected EXE uses Unreal's -Win64-<configuration> naming; Content\Paks directory; Unreal-style .pak under Content\Paks; IoStore .utoc/.ucas under Content\Paks; Engine\Binaries\ThirdParty directory
+ImageBase: 0x140000000
+Scanned: 2026-09-13 09:22:39
+Analysis source: on-disk executable
+On-disk image classification: ordinary/static-analysis-compatible
+On-disk layout evidence: largest executable section '.text' is 119.5 MB with sampled entropy 6.115/8; section names 9/9 unique; .text=present; exception entries=528820; native static-family hits=128.
+
+FName_Constructor: VERIFIED | REQUIRED | Match RVA 0x139A670 | Target RVA 0x139A670 | matches 1 | scan time <1ms
+  Analysis tier: T1 - Direct fingerprint
+  Validation: Unique full PatternSleuth FName(wchar_t const*, EFindName) direct prologue matched at an executable address; the long fingerprint itself encodes EFindName preservation plus wchar_t null/read/test behavior, so .pdata corroboration and the expensive semantic XREF fallback are unnecessary.
+  Match section: .text | Target section: .text
+  Actual bytes: 48 89 5C 24 08 57 48 83 EC 30 48 8B D9 41 8B F8 33 C9 4C 8B DA 44 8B D1 4C 8B CA 48 85 D2 74 23 0F B7 02 66 85 C0
+  Resolver source: PatternSleuth direct prologue + direct-prologue fast verification | mode: direct
+  Secondary proof: The complete unique PatternSleuth constructor fingerprint itself supplies the structural identity proof; executable-section validation confirms the target is code.
+FName_ToString: VERIFIED | OPTIONAL | Match RVA 0x2195E77 | Target RVA 0x13ABD50 | matches 23 | scan time 375ms
+  Analysis tier: T3 - Structural / consensus
+  Validation: Consensus 22/23 resolver hits (95.7%) converged on one .pdata function start; the remaining 1 hit(s) were outliers. Generated callsite AOB is unique and the selected E8 rel32 target is structurally validated.
+  Match section: .text | Target section: .text
+  Actual bytes: 4C 24 58 48 8D 4C 24 58 E8 CC 5E 21 FF 83 7C 24 38 00 48 8D 0D A4 37 62 05
+  Resolver source: PatternSleuth multi-pattern consensus | mode: rel32
+  Consensus: 0x13ABD50: 22 of 23 hits; runner-up support 1.
+StaticConstructObject: VERIFIED | REQUIRED | Match RVA 0x6A76DCC | Target RVA 0x15EEC10 | matches 654 | scan time 2.48s
+  Analysis tier: T5 - Deep call graph
+  Validation: native semantic evidence: runtime=PE exception directory RVA 0x9D4B000 (528820 entries); NewObject roots=1037, RF-flags candidates=10, class anchors=3/3, class-root functions=0; phase2 empty-name consensus -> RF-flags target Bounded code at the exact executable target contains StaticConstructObject_Internal's distinctive 0x10000080 RF-flags test immediate. Generated callsite AOB is unique and retains a validated E8 rel32 resolver.
+  Match section: .text | Target section: .text
+  Actual bytes: 00 00 00 E8 4C 0B B6 FA 48 8D 8C 24 80 00 00 00 48 89 BC 24 88 00 00 00 E8 27 7E B7 FA 48 8B F8 48 39 9C 24 C0 00 00 00 74 1D 48 8B 94 24 E8 00 00 00 48 8D 8C 24 D0 00 00 00 48 85 D2
+  Resolver source: ScannerCore native semantic SCO resolver | mode: rel32
+  Consensus: Native semantic support 654 vs runner-up 1.
+  Diagnostics: native semantic evidence: runtime=PE exception directory RVA 0x9D4B000 (528820 entries); NewObject roots=1037, RF-flags candidates=10, class anchors=3/3, class-root functions=0; phase2 empty-name consensus -> RF-flags target
+  Secondary proof: Bounded code at the exact executable target contains StaticConstructObject_Internal's distinctive 0x10000080 RF-flags test immediate.
+GMalloc: VERIFIED | REQUIRED | Match RVA 0x12594A3 | Target RVA 0x99CF060 | matches 1 | scan time <1ms
+  Analysis tier: T2 - Known / corpus signature
+  Validation: Actual ModRM 0x0D confirms RIP-relative disp32 addressing. Existing known signature revalidated uniquely before generic fallbacks were scanned.
+  Match section: .text | Target section: .data
+  Actual bytes: EB 03 48 8B CF 48 8B C3 F0 48 0F B1 0D AC 5B 77 08 74 11 48 85 C9 74 A5 48 8B
+  Resolver source: Known custom corpus: GMalloc Purg_notX verified family (revalidated fast path) | mode: rel32
+GUObjectArray: VERIFIED | REQUIRED | Match RVA 0x14CA075 | Target RVA 0x98024D0 | matches 1 | scan time 407ms
+  Analysis tier: T3 - Structural / callsite
+  Validation: Three RIP-relative object-count operands reconstruct one FUObjectArray base using PatternSleuth's known field layout [0x0, 0x24, 0x60]. All operands map inside the current PE image. Generated RIP-relative AOB is unique and resolves back to the reconstructed FUObjectArray base.
+  Match section: .text | Target section: .data
+  Actual bytes: 8B 05 79 84 33 08 2B 05 AF 84 33 08 2B 05 49 84 33 08
+  Resolver source: PatternSleuth GUObjectArray object-count field layout | mode: rel32
+  Consensus: 1 valid object-count layout hit(s) converged on FUObjectArray RVA 0x98024D0.
+  Diagnostics: Object-count layout fallback selected displacement +0xE with resolver adjustment +0x0.
+FText_Constructor: NOT FOUND | OPTIONAL | matches 0 | scan time <1ms
+  Analysis tier: T3 - Structural / callsite
+GUObjectHashTables: VERIFIED | OPTIONAL | Match RVA 0x15E4699 | Target RVA 0x15E26F0 | matches 1 | scan time <1ms
+  Analysis tier: T3 - Structural / callsite
+  Validation: Actual bytes confirm CALL rel32 (E8 + disp32).
+  Match section: .text | Target section: .text
+  Actual bytes: CC CC CC CC CC CC CC 48 83 EC 28 E8 47 E0 FF FF 48 8B 80 C0 01 00 00 90 48
+  Resolver source: PatternSleuth FUObjectHashTables::Get family | mode: rel32
+GNatives: VERIFIED | OPTIONAL | Match RVA 0xDE2250 | Target RVA 0x9ABD4A0 | matches 32 | scan time <1ms
+  Analysis tier: T3 - Structural / callsite
+  Validation: Actual ModRM 0x05 confirms RIP-relative disp32 addressing.
+  Match section: .text | Target section: .data
+  Actual bytes: 80 3D EE C3 CD 08 00 48 8D 15 B2 6B 7E 00 75 64 C6 05 DE C3 CD 08 01 48 8D 05 32 B2 CD 08 B9
+  Resolver source: PatternSleuth GNatives direct family | mode: rel32
+ConsoleManager: STRONG | OPTIONAL | Match RVA 0x121E250 | Target RVA 0x121E250 | matches 1 | scan time 16.36s
+  Analysis tier: T4 - Semantic XREF
+  Validation: ConsoleManager was identified from Unreal diagnostic/console string XREFs and a unique executable root-function AOB.
+  Match section: .text | Target section: .text
+  Actual bytes: 48 83 EC 38 48 8B 0D 2D B1 77 08 48 85 C9 75 0C
+  Resolver source: PatternSleuth semantic string/XREF | mode: direct
+  Diagnostics: 1 anchor string hit(s); 1 unique root function(s); winner support 1 anchor family/families.
+GameEngineTick: VERIFIED | OPTIONAL | Match RVA 0x3CA40D0 | Target RVA 0x3CA40D0 | matches 2 | scan time 9.84s
+  Analysis tier: T4 - Semantic XREF
+  Validation: GameEngineTick was independently identified by both upstream semantic anchor families and its generated function-entry AOB is unique.
+  Match section: .text | Target section: .text
+  Actual bytes: 40 55 53 41 54 41 55 41 57 48 8D 6C 24 E0 48 81 EC 20 01 00 00 0F 29 B4
+  Resolver source: PatternSleuth semantic string/XREF | mode: direct
+  Diagnostics: 2 anchor string hit(s); 1 unique root function(s); winner support 2 anchor family/families.
+ProcessLocalScriptFunction: NOT FOUND | OPTIONAL | matches 0 | scan time <1ms
+  Analysis tier: T5 - Override-only target
+  Resolver source: UE4SS rare hook override
+  Diagnostics: UE4SS recognizes this custom-signature override, but current upstream PatternSleuth does not expose a generalized resolver for it. Existing installed/custom signatures are imported and revalidated when present; the generator will not invent a weak AOB.
+ProcessInternal: NOT FOUND | OPTIONAL | matches 0 | scan time <1ms
+  Analysis tier: T5 - Override-only target
+  Resolver source: UE4SS rare hook override
+  Diagnostics: UE4SS recognizes this custom-signature override, but current upstream PatternSleuth does not expose a generalized resolver for it. Existing installed/custom signatures are imported and revalidated when present; the generator will not invent a weak AOB.
+CallFunctionByNameWithArguments: NOT FOUND | OPTIONAL | matches 0 | scan time <1ms
+  Analysis tier: T5 - Override-only target
+  Resolver source: UE4SS rare hook override
+  Diagnostics: UE4SS recognizes this custom-signature override, but current upstream PatternSleuth does not expose a generalized resolver for it. Existing installed/custom signatures are imported and revalidated when present; the generator will not invent a weak AOB.
+
+UE4SS target coverage: Required 4/4 | Optional 5/9 | Total 9/13
+Signatures available to generate: 9
+  VERIFIED: 8
+  STRONG: 1
+  UNVERIFIED: 0
+  Total scan time: 30.62s
+
+Status meanings:
+  VERIFIED   Resolver evidence plus an independent structural/addressing proof converged on the same target. Generates normally.
+  STRONG     High-confidence structural resolver result. May be generated after acknowledging the risk warning.
+  UNVERIFIED Plausible candidate whose symbol-identity evidence is incomplete. May be generated only after an explicit risk warning.
+  NOT FOUND  No supported resolver pattern or semantic chain matched. Cannot be generated.
+  AMBIGUOUS  Multiple possible targets without decisive evidence. Cannot be generated.
+
+Requirement meanings:
+  REQUIRED   Upstream UE4SS treats failure of this PatternSleuth target as a scan failure/core compatibility issue.
+  OPTIONAL   Upstream UE4SS can continue without this target; related functionality or mods may still need it.
+
+Scanning never modifies the selected executable. Existing installed UE4SS custom signatures are imported when their resolver form is understood, rescanned against the selected EXE, and subjected to the same validation rules. Built-in known-good corpus entries are likewise reverified rather than blindly trusted. Generate includes VERIFIED/STRONG/UNVERIFIED rows; risky rows require confirmation.
